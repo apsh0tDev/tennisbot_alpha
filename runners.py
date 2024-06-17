@@ -6,9 +6,9 @@ from schedule import scrape_events
 from scheduler import Scheduler
 
 schedule = Scheduler()
+logger.add("error_warnings.log", level="WARNING")
 
 def run_schedule():
-    logger.add("error_warnings.log", level="WARNING")
     asyncio.run(scrape_events())
 
 schedule.cyclic(dt.timedelta(hours=1), run_schedule)
