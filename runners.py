@@ -7,6 +7,7 @@ from scheduler import Scheduler
 
 schedule = Scheduler()
 logger.add("error_warnings.log", level="WARNING")
+print("Creating logger...")
 
 def run_schedule():
     asyncio.run(scrape_events())
