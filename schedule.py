@@ -18,23 +18,27 @@ async def scrape_events():
         'url' : constants.schedule_url,
         'requestType' : 'request'
     }
-
-    try:
-        response = await get_data(data=data)
-        if response == None:
-            logger.warning(f"Error getting BetMGM Data - Trying again")
-            attempt_count += 1
-        else:
-            #Verifier function
-            is_valid = verifier(response) #TODO verifier
-            if is_valid:
-                await scheduler_parser(response=response)
+    attempt_count = 1
+    while attempt_count < 3:
+        try:
+            response = await get_data(data=data)
+            if response == None:
+                logger.warning(f"Error getting BetMGM Data - Trying again")
+                attempt_count += 1
             else:
-                logger.warning(f"Error verifying schedule")
+                #Verifier function
+                is_valid = verifier(response) #TODO verifier
+                if is_valid:
+                    await scheduler_parser(response=response)
+                    break
+                else:
+                    logger.warning(f"Error verifying schedule")
 
-    except Exception as e:
-        logger.warning(f"""Error scraping schedule
-                        {e}""")
+        except Exception as e:
+            attempt_count += 1
+            logger.warning(f"""Error scraping schedule
+                            {e}""")
+            
         
 async def scheduler_parser(response):
     schedule_table = db.table("schedule").select("match_id").execute()
@@ -57,7 +61,6 @@ async def scheduler_parser(response):
                     "tournament" : match['tournament']['name']['value'],
                     "tournament_display_name": match['competition']['name']['value'],
                     "date" : match['startDate'],
-                    #sometimes the matches don't show the players at first, in that case we'll use "Unknown" to avoid errors and crashes
                     "teamA" : teamA.strip(),
                     "teamB" : teamB.strip(),
                     "status" : match['stage']
