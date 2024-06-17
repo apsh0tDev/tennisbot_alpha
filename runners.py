@@ -1,12 +1,14 @@
 import time
 import asyncio
 import datetime as dt
-from schedule import scrape_events, schedule_clean_up
+from loguru import logger
+from schedule import scrape_events
 from scheduler import Scheduler
 
 schedule = Scheduler()
 
 def run_schedule():
+    logger.add("error_warnings.log", level="WARNING")
     asyncio.run(scrape_events())
 
 schedule.cyclic(dt.timedelta(hours=1), run_schedule)
