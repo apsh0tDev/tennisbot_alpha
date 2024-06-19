@@ -69,13 +69,5 @@ async def live(ctx):
     else:
         await ctx.send("No live matches are on at the moment.")
 
-@bot.command()
-async def sportsbooks(ctx):
-    await ctx.send("Available sportsbooks...")
-
-@bot.command()
-async def markets(ctx):
-    await ctx.send("Markets...")
-
 if __name__ == "__main__":
     bot.run(get_token())
