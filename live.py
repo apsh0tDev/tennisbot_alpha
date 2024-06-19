@@ -4,6 +4,7 @@ import constants
 from db import db
 from rich import print
 from loguru import logger
+from tabulate import tabulate
 from connection import get_data
 from utils import remove_parentheses, verifier
 
@@ -78,6 +79,8 @@ async def live_parser(response):
                     #Post into score table, if it exist, update score
                     if match['id'] not in score_ids:
                         await post_scores(score_info)
+                    elif match['scoreboard']['period'] == "Suspended":
+                        print("Match is suspended, don't do anything")
                     else:
                         await update_scores(score_info)
 
@@ -96,13 +99,18 @@ async def update_scores(match):
     response = db.table("scoreboard").update({'teamA': match['teamA'], 'teamB': match['teamB']}).eq('match_id', match['match_id']).execute()
     logger.info(response)
 
-#----- For discord bot
+
+
+#----- For discord bot ------------
 async def get_live_matches():
     live_matches = db.table("live_matches").select("*").execute()
     scoreboard = db.table("scoreboard").select("*").execute()
     
     if len(live_matches.data) > 0 and len(scoreboard.data) > 0:
         formatted = await format_live_matches(data=live_matches.data, scores=scoreboard.data)
+        return formatted
+    else:
+        return None
 
 #Formats the live data and returns a discord-friendly message
 async def format_live_matches(data, scores):
@@ -110,19 +118,40 @@ async def format_live_matches(data, scores):
 
     #Group by event
     group = await live_merger(data=data, scores=scores)
-    print(group)
+    if len(group) > 0:
+        for tournament in group:
+            formatted = await format_tournament(tournament=tournament)
+            table_output = "\n".join(formatted)
+            code_block = f"""```
+            {table_output}
+            ```"""
+            return code_block
 
 async def live_merger(data, scores):
     logger.info("Merging events")
-    print(scores)
+    scores_dict = {}
+
+    for score in scores:
+        if 'match_id' in score:
+            scores_dict[score['match_id']] = score
+        else:
+            logger.warning(f"Score entry missing 'match_id': {score}")
+
     merged_list = []
     for entry in data:
         tournament_exists = False
+        match_id = entry.get('match_id')
         info = {
             "match_name" : entry['match_name'],
             "teamA" : entry['teamA'],
             "teamB" : entry['teamB'],
         }
+
+        if match_id in scores_dict:
+            score = scores_dict[match_id]
+            info['teamA_score'] = score['teamA'][0]
+            info['teamB_score'] = score['teamB'][0]
+            info['period'] = score['period']
 
         for item in merged_list:
             if item['tournament'] == entry['tournament']:
@@ -137,6 +166,44 @@ async def live_merger(data, scores):
             logger.info(f"{entry['tournament']} already in list, adding events...")
     return merged_list
 
+async def format_tournament(tournament):
+    print(f"Formatting live tournament: {tournament['tournament']}")
+    formatted_event = []
+    #This will be the title
+    formatted_event.append(f"{tournament['tournament'].upper()}\n")
+   #And this is the list of events
+    for match in tournament['events']:
+        header = [
+                f"{match['period']}",
+                "*",
+                "1st",
+                "2nd",
+                "3rd"
+                #TODO add optional 4th and 5th set
+            ]
+
+        first_row = [
+                f"{match['teamA']}",
+                "*",
+                f"{match['teamA_score'][0]}",
+                f"{match['teamA_score'][1]}",
+                f"{match['teamA_score'][2]}"
+            ]
+
+        second_row = [
+                f"{match['teamB']}",
+                "*",
+                f"{match['teamB_score'][0]}",
+                f"{match['teamB_score'][1]}",
+                f"{match['teamB_score'][2]}"           
+            ]
+
+            #unify the table
+        body = [header, first_row, second_row]
+        score_table = tabulate(body, tablefmt="simple")
+        formatted_event.append(f"{match['match_name']}\n{score_table}\n")
+
+    return formatted_event
 
 if __name__ == "__main__":
     asyncio.run(get_live_matches())
