@@ -1,11 +1,13 @@
 import re
 import pytz
 from datetime import datetime
+from loguru import logger
 
 def verifier(value):
     if 'solution' in value and 'verified' in value['solution'] and value['solution']['verified'] == True:
         return True
     else:
+        logger.error(value)
         return False
     
 def remove_parentheses(text):

@@ -27,7 +27,7 @@ async def scrape_events():
                 attempt_count += 1
             else:
                 #Verifier function
-                is_valid = verifier(response) #TODO verifier
+                is_valid = verifier(response)
                 if is_valid:
                     await scheduler_parser(response=response)
                     break
