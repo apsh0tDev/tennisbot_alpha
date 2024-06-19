@@ -21,8 +21,8 @@ def run_schedule():
 tz_venezuela = dt.timezone(dt.timedelta(hours=-4))
 
 schedule.cyclic(dt.timedelta(hours=1), run_schedule)
-schedule.daily(dt.time(hour=18, minute=00), get_log_file)
-schedule.cyclic(dt.timedelta(seconds=interval), run_live)
+schedule.daily(dt.time(hour=16, minute=30), get_log_file)
+#schedule.cyclic(dt.timedelta(seconds=interval), run_live)
 
 while True:
     schedule.exec_jobs()

@@ -41,8 +41,9 @@ async def scrape_events():
             
         
 async def scheduler_parser(response):
-    schedule_table = db.table("schedule").select("match_id").execute()
+    schedule_table = db.table("schedule").select("match_id", "match_name").execute()
     matches_ids = [item['match_id'] for item in schedule_table.data]
+    matches_names = [item['match_name'] for item in schedule_table.data]
     # Collects the previous schedule data, and saves the ids of the matches
     # later we need to compared them to the new fetched data, to avoid posting duplicate matches
 
@@ -71,9 +72,9 @@ async def scheduler_parser(response):
                         response = db.table("schedule").insert(match_info).execute()
                     except Exception as e:
                         logger.error(f"There was an Error while uploading to the database: {e}")
-                elif match['id'] in matches_ids and match['stage'] == "Live":
-                    logger.info(f"Match {match['id']} already started!")
-                    await schedule_clean_up(match['id'])
+                elif match['name']['value'] in matches_names and match['stage'] == "Live":
+                    logger.info(f"Match {match['name']['value']} already started!")
+                    await schedule_clean_up(match)
                 else:
                     logger.info(f"Match {match['id']} already exists in table. Skipping.")
 
@@ -129,9 +130,9 @@ async def format_schedule(data):
     
 
 #--- Clean up function - use carefully
-async def schedule_clean_up(id):
+async def schedule_clean_up(match):
     logger.info("Running clean up 🧹")
-    db.table("schedule").delete().eq('id', id).execute()
+    db.table("schedule").delete().match({'match_name' : match['name']['value'], 'date': match['startDate']}).execute()
     logger.info("Cleanup Done!")
 
 
