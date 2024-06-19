@@ -10,7 +10,6 @@ from live import scrape_live_events
 
 schedule = Scheduler()
 logger.add("error_warnings.log", level="WARNING")
-interval = random.randrange(30, 60)
 
 def run_live():
     asyncio.run(scrape_live_events())
@@ -22,7 +21,7 @@ tz_venezuela = dt.timezone(dt.timedelta(hours=-4))
 
 schedule.cyclic(dt.timedelta(hours=1), run_schedule)
 schedule.daily(dt.time(hour=16, minute=30), get_log_file)
-#schedule.cyclic(dt.timedelta(seconds=interval), run_live)
+schedule.cyclic(dt.timedelta(seconds=random.randrange(30, 60)), run_live)
 
 while True:
     schedule.exec_jobs()

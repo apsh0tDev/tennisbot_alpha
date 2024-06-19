@@ -1,6 +1,10 @@
 import os
+import traceback
 import discord
+import textwrap
 import constants
+from loguru import logger
+from live import get_live_matches
 from schedule import get_schedule
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -28,6 +32,16 @@ def get_token():
 async def on_ready():
     print("Bot running")
 
+@bot.event
+async def on_command_error(ctx: commands.Context, error):
+    try:
+            # Log all unhandled errors
+            logger.error(f'Ignoring exception in command {ctx.command}: {type(error).__name__}: {error}')
+            await ctx.send("An error occurred. Please try again later.")
+    except Exception as e:
+        # Catch any exception that occurs within the error handler itself
+        logger.error(f'Exception in error handler: {type(e).__name__}: {e}')
+
 #------- Bot Commands ------
 @bot.command()
 async def commands(ctx):
@@ -48,7 +62,12 @@ async def schedule(ctx):
 
 @bot.command()
 async def live(ctx):
-    await ctx.send("Getting live matches...")
+    response = await get_live_matches()
+    if response != None:
+        message = textwrap.dedent(response)
+        await ctx.send(message)
+    else:
+        await ctx.send("No live matches are on at the moment.")
 
 @bot.command()
 async def sportsbooks(ctx):
