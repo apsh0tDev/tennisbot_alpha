@@ -2,6 +2,8 @@ import os
 import json
 import requests
 from rich import print
+from loguru import logger
+from utils import verifier
 from typing import Literal
 from dotenv import load_dotenv
 
@@ -22,3 +24,26 @@ async def get_data(data):
         print("Error")
         print(response)
         return None
+    
+
+#------- General
+async def scrape(data, site, attempt_count):
+    logger.info(f"Scraping from {site}")
+
+    tries = 0
+    while tries < attempt_count:
+        try:
+            response = await get_data(data=data)
+            if response == None:
+                logger.warning(f"Error getting data - Trying again - ({tries}/{attempt_count})")
+                tries += 1
+            else:
+                is_valid = verifier(response)
+                if is_valid:
+                    return response['solution']['response']
+                else:
+                    logger.warning(f"Error verifying data - Trying gaian - ({tries}/{attempt_count})")
+                    tries += 1
+        except Exception as e:
+            logger.warning(f"""Error scraping live data {e}""")
+            tries += 1

@@ -8,7 +8,6 @@ from tabulate import tabulate
 from connection import get_data
 from utils import remove_parentheses, verifier
 
-
 async def scrape_live_events():
     logger.info("Scraping Live events from BetMGM")
     #No need for proxy
@@ -49,7 +48,10 @@ async def live_parser(response):
         load = json.loads(response['solution']['response'])
         if 'widgets' in load and 'payload' in load['widgets'][0] and 'fixtures' in load['widgets'][0]['payload']:
             fixtures = load['widgets'][0]['payload']['fixtures']
+            match_ids = []
+
             for match in fixtures:
+                match_ids.append(match['id'])
                 if match['stage'] == "Live":
                     teamA = f"{remove_parentheses(match['participants'][0]['name']['value']) if len(match['participants']) > 0 else "Unknown"}"
                     teamB = f"{remove_parentheses(match['participants'][1]['name']['value']) if len(match['participants']) > 1 else "Unknown"}"
@@ -84,22 +86,38 @@ async def live_parser(response):
                     else:
                         await update_scores(score_info)
 
+            #clean up 🧹
+            setB = set(match_ids)
+            removed_elements = []
+
+            filtered = []
+            for x in live_ids:
+                if x in setB:
+                    filtered.append(x)
+                else:
+                    removed_elements.append(x)
+
+            for item in removed_elements:
+                await clean_up(item)
+
+
     except Exception as e:
-        logger.warning(f"There was an Error while parsing the schedule: {e}")
+        logger.warning(f"There was an Error while parsing the live matches: {e}")
+
 
 async def post_match(match):
-    response = db.table("live_matches").insert(match).execute()
-    logger.info(response)
+    db.table("live_matches").insert(match).execute()
 
 async def post_scores(match):
-    response = db.table("scoreboard").insert(match).execute()
-    logger.info(response)
+    db.table("scoreboard").insert(match).execute()
+    
 
 async def update_scores(match):
-    response = db.table("scoreboard").update({'teamA': match['teamA'], 'teamB': match['teamB']}).eq('match_id', match['match_id']).execute()
-    logger.info(response)
-
-
+    db.table("scoreboard").update({'teamA': match['teamA'], 'teamB': match['teamB']}).eq('match_id', match['match_id']).execute()
+    
+async def clean_up(id):
+    response = db.table("live_matches").delete().eq('match_id', id).execute()
+    print(response)
 
 #----- For discord bot ------------
 async def get_live_matches():
