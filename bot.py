@@ -3,11 +3,13 @@ import traceback
 import discord
 import textwrap
 import constants
+import market_commands
 from loguru import logger
 from live import get_live_matches
 from schedule import get_schedule
 from dotenv import load_dotenv
 from discord.ext import commands
+
 
 
 #---Init
@@ -26,6 +28,33 @@ def get_token():
     elif current_branch == "PROD":
         DISCORD_API = os.getenv("TOKEN_PROD")
     return DISCORD_API
+
+
+#------- Bot Classes ------
+class MarketsDropdown(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(label="Match Winner")
+        ] 
+
+        super().__init__(placeholder="Choose a market", options=options, min_values=1, max_values=1)
+    
+    async def callback(self, interaction: discord.Interaction):
+        market = self.values[0]
+        match market:
+            case "Match Winner":
+                response = await market_commands.get_match_winner()
+                if response:
+                    await interaction.response.send_message(f"```{response[0]}```")
+                    for item in response[1:]:
+                        await interaction.followup.send(f"```{item}```")
+                else:
+                    await interaction.response.send_message("No data to display.")
+
+class MarketsView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(MarketsDropdown())
 
 #------- Bot Events -------
 @bot.event
@@ -68,6 +97,10 @@ async def live(ctx):
         await ctx.send(message)
     else:
         await ctx.send("No live matches are on at the moment.")
+
+@bot.command()
+async def markets(ctx):
+    await ctx.send("Click on the dropdown below to choose the markert", view=MarketsView())
 
 if __name__ == "__main__":
     bot.run(get_token())
