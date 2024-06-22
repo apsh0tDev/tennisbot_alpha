@@ -6,6 +6,7 @@ from loguru import logger
 from utils import verifier
 from typing import Literal
 from dotenv import load_dotenv
+from fp.fp import FreeProxy
 
 load_dotenv()
 key = os.getenv("SCRAPPEY_KEY")
@@ -13,6 +14,8 @@ provider: Literal["Scrappey", "AnyIP"] = "AnyIP"
 
 headers = { 'Content-Type' : 'application/json' }
 scrappey = f"https://publisher.scrappey.com/api/v1?key={key}"
+
+proxy_needed = ["Draftkings"]
 
 #TODO add banned validation
 async def get_data(data):
@@ -25,7 +28,17 @@ async def get_data(data):
         print(response)
         return None
     
-
+async def get_data_with_proxy(data, proxy):
+    data['proxy'] = proxy
+    options = data
+    try:
+        response = requests.post(scrappey, headers=headers, json=options)
+        return response.json()
+    except(ValueError, json.decoder.JSONDecodeError):
+        print("Error")
+        print(response)
+        return None
+    
 #------- General
 async def scrape(data, site, attempt_count):
     logger.info(f"Scraping from {site}")
@@ -33,7 +46,11 @@ async def scrape(data, site, attempt_count):
     tries = 0
     while tries < attempt_count:
         try:
-            response = await get_data(data=data)
+            if site in proxy_needed:
+                proxy = FreeProxy(country_id=['US', 'CA']).get()
+                response = await get_data_with_proxy(data=data, proxy=proxy)
+            else:
+                response = await get_data(data=data)
             if response == None:
                 logger.warning(f"Error getting data - Trying again - ({tries}/{attempt_count})")
                 tries += 1
@@ -42,7 +59,7 @@ async def scrape(data, site, attempt_count):
                 if is_valid:
                     return response['solution']['response']
                 else:
-                    logger.warning(f"Error verifying data - Trying gaian - ({tries}/{attempt_count})")
+                    logger.warning(f"Error verifying data - Trying again - ({tries}/{attempt_count})")
                     tries += 1
         except Exception as e:
             logger.warning(f"""Error scraping live data {e}""")
