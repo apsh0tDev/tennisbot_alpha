@@ -2,6 +2,7 @@ import re
 import pytz
 from datetime import datetime
 from loguru import logger
+import datetime as dt
 
 def verifier(value):
     if 'solution' in value and 'verified' in value['solution'] and value['solution']['verified'] == True:
@@ -32,3 +33,20 @@ def format_datetime(input_datetime_str):
 def remove_year(text):
     # This regex looks for a four-digit number (representing a year) and removes it
     return re.sub(r'\b\d{4}\b', '', text).strip()
+
+
+#------- ONLY FOR TESTING
+
+def get_start_hour_for_testing():
+    # Get the current time in UTC
+    now = dt.datetime.now(dt.timezone.utc)
+    # Set the event start time to 45 minutes from now
+    event_start_time = now + dt.timedelta(minutes=45)
+    # Convert the event start time to ISO format
+    event_start_iso = event_start_time.isoformat().replace("+00:00", "Z")
+    file = open("start_at.dat", "w")
+    file.write(event_start_iso)
+
+
+if __name__ == "__main__":
+    get_start_hour_for_testing()

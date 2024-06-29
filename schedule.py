@@ -52,7 +52,7 @@ async def scheduler_parser(response):
         if 'widgets' in load and 'payload' in load['widgets'][0] and 'fixtures' in load['widgets'][0]['payload']:
             fixtures = load['widgets'][0]['payload']['fixtures']
             
-            start_at = open("start_at.txt", "w")
+            start_at = open("start_at.dat", "w")
             start_at.write(fixtures[0]['startDate'])
 
             for match in fixtures:
@@ -140,7 +140,7 @@ async def schedule_clean_up(match):
 
 #--- To start runners
 def get_start_hour():
-    f = open("start_at.txt", "r")
+    f = open("start_at.dat", "r")
     return f.read()
 
 if __name__ == "__main__":
