@@ -7,9 +7,6 @@ from thefuzz import fuzz
 from loguru import logger
 from notifier import notification
 
-#---- Test
-import fake
-
 async def get_moneyline():
     logger.info("ARBITRAGE CALCULATOR")
     moneyline_table = db.table("moneyline").select("*").execute()
