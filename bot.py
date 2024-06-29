@@ -34,22 +34,30 @@ def get_token():
 class MarketsDropdown(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Match Winner")
+            discord.SelectOption(label="Moneyline")
+            #discord.SelectOption(label="Match Winner"),
+            #discord.SelectOption(label="Set 1 Winner")
         ] 
 
         super().__init__(placeholder="Choose a market", options=options, min_values=1, max_values=1)
     
     async def callback(self, interaction: discord.Interaction):
         market = self.values[0]
-        match market:
-            case "Match Winner":
-                response = await market_commands.get_match_winner()
-                if response:
+        standard = ["Match Winner", "Set 1 Winner"]
+        if market in standard:
+            match market:
+                case "Match Winner":
+                    table = "match_winner"
+                case "Set 1 Winner":
+                    table = "set_one_winner"
+                    
+            response = await market_commands.get_standard_data(table=table)
+            if response:
                     await interaction.response.send_message(f"```{response[0]}```")
                     for item in response[1:]:
                         await interaction.followup.send(f"```{item}```")
-                else:
-                    await interaction.response.send_message("No data to display.")
+            else:
+                await interaction.response.send_message("No data to display.")
 
 class MarketsView(discord.ui.View):
     def __init__(self):

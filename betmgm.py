@@ -33,6 +33,8 @@ def switcher(game, id, match_name, tournament):
     match name:
         case "Match Winner":
             markets.handle_match_winner(game, id, tournament,  match_name, "BetMGM", True)
+        case "Set 1 Winner":
+            markets.handle_set_one_winner(game, id, tournament, match_name, "BetMGM", False)
 
 if __name__ == "__main__":
     asyncio.run(scrape_data())

@@ -3,13 +3,7 @@ from rich import print
 from db import db
 from tabulate import tabulate, SEPARATING_LINE
 
-#------ Match winner
-async def get_match_winner():
-    match_winner = db.table("match_winner").select("*").execute()
-    response = await parse_match_winner(match_winner.data)
-    return response
-
-async def parse_match_winner(data):
+async def parse_table(data):
     print("Parsing match winner")
  
     chunks = [data[i:i + 5] for i in range(0, len(data), 5)]
@@ -54,4 +48,8 @@ async def parse_match_winner(data):
     
         
 
-        
+#------ Standard
+async def get_standard_data(table):
+    data = db.table(table).select("*").execute()
+    response = await parse_table(data.data)
+    return response
