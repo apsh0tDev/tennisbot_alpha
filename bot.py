@@ -8,14 +8,14 @@ from loguru import logger
 from live import get_live_matches
 from schedule import get_schedule
 from dotenv import load_dotenv
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 
 #---Init
 load_dotenv()
 
-current_branch = "PROD"
+current_branch = "DEV"
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -68,6 +68,7 @@ class MarketsView(discord.ui.View):
 @bot.event
 async def on_ready():
     print("Bot running")
+    status_checker.start()
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
@@ -78,6 +79,17 @@ async def on_command_error(ctx: commands.Context, error):
     except Exception as e:
         # Catch any exception that occurs within the error handler itself
         logger.error(f'Exception in error handler: {type(e).__name__}: {e}')
+
+#------- Bot Tasks -------
+@tasks.loop(hours=1)
+async def status_checker():
+        print("Checking status...")
+        file = open("runner_status.dat", "r")
+        status = str(file.read())
+        if status == "Live":
+            await bot.change_presence(status=discord.Status.online)
+        elif status == "Not_Live":
+            await bot.change_presence(status=discord.Status.idle)
 
 #------- Bot Commands ------
 @bot.command()

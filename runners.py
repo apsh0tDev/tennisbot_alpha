@@ -24,14 +24,31 @@ def get_live_data():
     asyncio.run(scrape_live_events())
 
 def get_schedule():
-    print(get_start_hour())
     iso_datetime = get_start_hour()
     dt_object = dt.datetime.fromisoformat(iso_datetime.replace("Z", "+00:00"))
-    time_component = dt_object.time()
-    print(time_component)
-    
-    #asyncio.run(scrape_events())
 
+    now = dt.datetime.now(dt.timezone.utc)
+    time_difference = dt_object - now
+    if 0 < time_difference.total_seconds() < 3600:
+        print("The event starts within an hour.")
+        
+        jobs = scheduler.get_jobs()
+        jobs_names = []
+        for job in jobs:
+            jobs_names.append(job.name)
+
+        if 'get_live_data' not in jobs_names:
+            scheduler.add_job(get_live_data, 'interval', minutes=1)
+
+        if 'scrape_fan_duel' not in jobs_names:
+            scheduler.add_job(scrape_fanduel, 'interval', seconds=40)
+        
+        if 'scrape_draftkings' not in jobs_names:
+            scheduler.add_job(scrape_draftkings, 'interval', seconds=45)
+    else:
+        print("The event does not start within an hour.")
+    
+    asyncio.run(scrape_events())
 
 
 job_defaults = {
@@ -39,12 +56,17 @@ job_defaults = {
     'max_instances': 10
 }
 scheduler.configure(job_defaults=job_defaults)
-#scheduler.add_job(get_live_data, 'interval', minutes=1)
-#scheduler.add_job(scrape_fanduel, 'interval', seconds=40)
-#scheduler.add_job(scrape_draftkings, 'interval', seconds=45)
 scheduler.add_job(get_schedule, 'interval', seconds=10)
 
+
 scheduler.start()
+
+def print_current_jobs():
+    jobs = scheduler.get_jobs()
+    for job in jobs:
+        print(f"{job}")
+
+print_current_jobs()
 
 try:
     asyncio.get_event_loop().run_forever()
