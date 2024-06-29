@@ -12,13 +12,13 @@ from scrapingant_client import ScrapingAntClient
 
 load_dotenv()
 key = os.getenv("SCRAPPEY_KEY")
-provider: Literal["Scrappey", "AnyIP"] = "AnyIP"
+scraping_ant = os.getenv("SCRAPING_ANT_KEY")
 
 headers = { 'Content-Type' : 'application/json' }
 scrappey = f"https://publisher.scrappey.com/api/v1?key={key}"
 
-proxy_needed = ["Draftkings"]
-client = ScrapingAntClient(token='08e2512b9b8540e58e420b21eacc810f')
+proxy_needed = ["Draftkings", "FanDuel"]
+client = ScrapingAntClient(token=scraping_ant)
 
 #TODO add banned validation
 async def get_data(data):

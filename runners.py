@@ -2,27 +2,51 @@ import time
 import random
 import asyncio
 import datetime as dt
+import draftkings
+import fanduel
 from loguru import logger
-from schedule import scrape_events
-from scheduler import Scheduler
-from warninglogger import get_log_file
+from arb import get_moneyline
 from live import scrape_live_events
+from schedule import scrape_events, get_start_hour
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-schedule = Scheduler()
+scheduler = AsyncIOScheduler()
 logger.add("error_warnings.log", level="WARNING")
+logger.add("history.log", level="INFO")
 
-def run_live():
+def scrape_fanduel():
+    asyncio.run(fanduel.scrape_data())
+
+def scrape_draftkings():
+    asyncio.run(draftkings.scrape_data())
+
+def get_live_data():
     asyncio.run(scrape_live_events())
 
-def run_schedule():
-    asyncio.run(scrape_events())
+def get_schedule():
+    print(get_start_hour())
+    iso_datetime = get_start_hour()
+    dt_object = dt.datetime.fromisoformat(iso_datetime.replace("Z", "+00:00"))
+    time_component = dt_object.time()
+    print(time_component)
+    
+    #asyncio.run(scrape_events())
 
-tz_venezuela = dt.timezone(dt.timedelta(hours=-4))
 
-schedule.cyclic(dt.timedelta(hours=1), run_schedule)
-schedule.daily(dt.time(hour=16, minute=30), get_log_file)
-schedule.cyclic(dt.timedelta(seconds=random.randrange(30, 60)), run_live)
 
-while True:
-    schedule.exec_jobs()
-    time.sleep(1)
+job_defaults = {
+    'coalesce': False,
+    'max_instances': 10
+}
+scheduler.configure(job_defaults=job_defaults)
+#scheduler.add_job(get_live_data, 'interval', minutes=1)
+#scheduler.add_job(scrape_fanduel, 'interval', seconds=40)
+#scheduler.add_job(scrape_draftkings, 'interval', seconds=45)
+scheduler.add_job(get_schedule, 'interval', seconds=10)
+
+scheduler.start()
+
+try:
+    asyncio.get_event_loop().run_forever()
+except (KeyboardInterrupt, SystemExit):
+    pass

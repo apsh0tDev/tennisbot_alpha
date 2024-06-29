@@ -34,8 +34,9 @@ def get_token():
 class MarketsDropdown(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label="Match Winner"),
-            discord.SelectOption(label="Set 1 Winner")
+            discord.SelectOption(label="Moneyline")
+            #discord.SelectOption(label="Match Winner"),
+            #discord.SelectOption(label="Set 1 Winner")
         ] 
 
         super().__init__(placeholder="Choose a market", options=options, min_values=1, max_values=1)

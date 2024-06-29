@@ -52,6 +52,9 @@ async def scheduler_parser(response):
         if 'widgets' in load and 'payload' in load['widgets'][0] and 'fixtures' in load['widgets'][0]['payload']:
             fixtures = load['widgets'][0]['payload']['fixtures']
             
+            start_at = open("start_at.txt", "w")
+            start_at.write(fixtures[0]['startDate'])
+
             for match in fixtures:
                 teamA = f"{remove_parentheses(match['participants'][0]['name']['value']) if len(match['participants']) > 0 else "Unknown"}"
                 teamB = f"{remove_parentheses(match['participants'][1]['name']['value']) if len(match['participants']) > 1 else "Unknown"}"
@@ -135,6 +138,10 @@ async def schedule_clean_up(match):
     db.table("schedule").delete().match({'match_name' : match['name']['value'], 'date': match['startDate']}).execute()
     logger.info("Cleanup Done!")
 
+#--- To start runners
+def get_start_hour():
+    f = open("start_at.txt", "r")
+    return f.read()
 
 if __name__ == "__main__":
     asyncio.run(scrape_events())

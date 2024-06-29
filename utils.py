@@ -28,3 +28,7 @@ def format_datetime(input_datetime_str):
     time_str = input_datetime.strftime("%I:%M %p")
 
     return f"{day_str} - {time_str}"
+
+def remove_year(text):
+    # This regex looks for a four-digit number (representing a year) and removes it
+    return re.sub(r'\b\d{4}\b', '', text).strip()
