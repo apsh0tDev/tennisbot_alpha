@@ -5,7 +5,7 @@ from db import db
 from rich import print
 from thefuzz import fuzz
 from loguru import logger
-from connection import scrape
+from connection_old import scrape
 from db_actions import update, upload
 
 

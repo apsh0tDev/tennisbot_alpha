@@ -5,7 +5,7 @@ from db import db
 from rich import print
 from loguru import logger
 from tabulate import tabulate
-from connection import get_data
+from connection_old import get_data
 from utils import remove_parentheses, verifier
 
 async def scrape_live_events():

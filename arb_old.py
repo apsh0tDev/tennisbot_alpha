@@ -84,4 +84,4 @@ async def calculate_arbitrage(matches):
 
 
 if __name__ == "__main__":
-    asyncio.run(calculate_arbitrage())
+    asyncio.run(get_moneyline())
