@@ -5,7 +5,7 @@ from db import db
 from rich import print
 from loguru import logger
 from utils import remove_year
-from connection import scrape
+from connection_old import scrape, get_data_with_scraping_ant
 
 
 
@@ -27,8 +27,8 @@ async def scrape_data():
                     
                 for market in list_of_dicts:
                     for key in market:
-                        if 'inPlay' in market[key] and market[key]['inPlay'] == True:
-                            logger.info(f"In play: {market[key]['competitionId']} - {market[key]['marketName']}")
+                        #if 'inPlay' in market[key] and market[key]['inPlay'] == True:
+                            #logger.info(f"In play: {market[key]['competitionId']} - {market[key]['marketName']}")
                             events.append(market[key])
                     
 
@@ -40,7 +40,9 @@ async def scrape_data():
                         for key in competition:
                               tournaments.append(competition[key])
                         
-            await get_moneyline(events, tournaments)
+            #await get_moneyline(events, tournaments)
+            await get_game_markets(events)
+            
                                          
 
         except Exception as e:
@@ -51,7 +53,6 @@ async def scrape_data():
 async def get_moneyline(data, tournaments):
         moneyline = db.table("moneyline").select("match_id").execute()
         ids = [item['match_id'] for item in moneyline.data]
-
         if len(data) > 0:
               for element in data:
                     competition_id = element['competitionId']
@@ -87,6 +88,11 @@ async def get_moneyline(data, tournaments):
         else:
                raise Exception("No events for moneyline")
         
+#---- Game markets
+async def get_game_markets(data):
+    print(data)
+
+        
 
 #---- TODO make this a single thing for all
         
@@ -97,6 +103,8 @@ async def upload(info, table):
 async def update(info, table, id):
       response = db.table(table).update(info).eq('match_id', id).execute()
       logger.info(f"Updating: {response}")
+
+
 
 if __name__ == "__main__":
         asyncio.run(scrape_data())
