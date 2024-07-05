@@ -66,9 +66,6 @@ def check_hour():
         if 'get_live_data' in jobs_names:
             logger.info("Removing live data job")
             scheduler.remove_job(get_live_data)
-
-    if ny_time.hour == 3:
-        print("this is just a test")
     else:
         logger.info("It's not time to do anything")
 
@@ -94,7 +91,7 @@ job_defaults = {
 scheduler.configure(job_defaults=job_defaults)
 #scheduler.add_job(all_runners, 'interval', minutes=1)
 scheduler.add_job(get_schedule, 'interval', minutes=30)
-scheduler.add_job(check_hour, 'interval', minutes=1 )
+scheduler.add_job(check_hour, 'interval', minutes=30 )
 scheduler.add_job
 
 
