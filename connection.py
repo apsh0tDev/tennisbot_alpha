@@ -6,8 +6,9 @@ import requests
 from rich import print
 from loguru import logger
 from utils import verifier
-from dotenv import load_dotenv
 from fp.fp import FreeProxy
+from dotenv import load_dotenv
+from constants import proxy_needed
 from scrapingant_client import ScrapingAntClient
 
 load_dotenv()
@@ -16,6 +17,8 @@ scraping_ant_key = os.getenv("SCRAPING_ANT_TOKEN")
 
 headers = { 'Content-Type' : 'application/json' }
 scrappey = f"https://publisher.scrappey.com/api/v1?key={key}"
+
+
 
 async def get_data(data):
     options = data
@@ -29,13 +32,17 @@ async def get_data(data):
     
 async def scrape(data, site):
     logger.info(f"Scraping from {site}")
-
     #Start attempts
     attempts = 0
     while attempts < 2:
         try:
-            
-            response = await get_data(data=data)
+            if site in proxy_needed:
+                proxy = await get_proxy()
+                data['proxy'] = proxy
+                logger.info(f"Using proxy {proxy}")
+                response = await get_data(data=data)
+            else:
+                response = await get_data(data=data)
             if response == None:
                 attempts += 1
                 logger.warning(f"Error getting data - Trying again - ({attempts}/2)")
@@ -50,3 +57,12 @@ async def scrape(data, site):
         except Exception as e:
             logger.warning(f"Error scraping live data from {site}: {e}")
             attempts += 1
+
+async def get_proxy():
+    with open('flagged.txt', 'r') as f:
+        flagged_proxies = f.read().splitlines()
+
+    while True:
+        proxy = FreeProxy(country_id=['US', 'CA', 'GB', 'AT', 'IE', 'MT']).get()
+        if proxy not in flagged_proxies:
+            return proxy
