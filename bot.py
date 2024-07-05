@@ -126,11 +126,11 @@ async def markets(ctx):
 
 @bot.command()
 async def arbitrage(ctx):
-    data = await arbitrage_table()
-    if data == None:
+    #data = await arbitrage_table()
+    #if data == None:
         await ctx.send("No active arbitrage opportunities right now. Check back soon!")
-    else:
-        await ctx.send(data)
+    #else:
+        #await ctx.send(data)
     
 
 
