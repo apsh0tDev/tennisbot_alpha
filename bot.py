@@ -4,11 +4,13 @@ import discord
 import textwrap
 import constants
 import market_commands
+from arb_list import arbitrage_table
 from loguru import logger
 from live import get_live_matches
 from schedule import get_schedule
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
+
 
 
 
@@ -121,6 +123,16 @@ async def live(ctx):
 @bot.command()
 async def markets(ctx):
     await ctx.send("Click on the dropdown below to choose the markert", view=MarketsView())
+
+@bot.command()
+async def arbitrage(ctx):
+    #data = await arbitrage_table()
+    #if data == None:
+        await ctx.send("No active arbitrage opportunities right now. Check back soon!")
+    #else:
+        #await ctx.send(data)
+    
+
 
 if __name__ == "__main__":
     bot.run(get_token())

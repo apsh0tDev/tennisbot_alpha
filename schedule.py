@@ -7,7 +7,7 @@ from db import db
 from rich import print
 from utils import verifier, remove_parentheses, format_datetime
 from loguru import logger
-from connection import get_data
+from connection_old import get_data
 
 
 async def scrape_events():

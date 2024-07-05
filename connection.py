@@ -1,79 +1,62 @@
 import os
 import json
 import time
+import asyncio
 import requests
 from rich import print
 from loguru import logger
 from utils import verifier
-from typing import Literal
-from dotenv import load_dotenv
 from fp.fp import FreeProxy
+from dotenv import load_dotenv
+from constants import proxy_needed
 from scrapingant_client import ScrapingAntClient
 
 load_dotenv()
 key = os.getenv("SCRAPPEY_KEY")
-scraping_ant = os.getenv("SCRAPING_ANT_KEY")
+scraping_ant_key = os.getenv("SCRAPING_ANT_TOKEN")
 
 headers = { 'Content-Type' : 'application/json' }
 scrappey = f"https://publisher.scrappey.com/api/v1?key={key}"
 
-proxy_needed = ["Draftkings", "FanDuel"]
-client = ScrapingAntClient(token=scraping_ant)
 
-#TODO add banned validation
+
 async def get_data(data):
     options = data
     try:
         response = requests.post(scrappey, headers=headers, json=options)
         return response.json()
     except(ValueError, json.decoder.JSONDecodeError):
-        print("Error")
-        print(response)
+        logger.error(f"ERROR")
+        logger.error(response)
         return None
     
-async def get_data_with_proxy(data, proxy):
-    data['proxy'] = proxy
-    options = data
-    try:
-        response = requests.post(scrappey, headers=headers, json=options)
-        return response.json()
-    except(ValueError, json.decoder.JSONDecodeError):
-        print("Error")
-        print(response)
-        return None
-    
-def get_data_with_scraping_ant():
-    result = client.general_request('https://sportsbook-nash.draftkings.com/sites/US-SB/api/v4/featured/displaygroups/6/live?format=json', proxy_country='US', browser=False)
-    
-    
-#------- General
-async def scrape(data, site, attempt_count):
+async def scrape(data, site):
     logger.info(f"Scraping from {site}")
-
-    tries = 0
-    while tries < attempt_count:
+    #Start attempts
+    attempts = 0
+    while attempts < 2:
         try:
             if site in proxy_needed:
                 proxy = await get_proxy()
-                print(f"Using proxy: {proxy}")
-                response = await get_data_with_proxy(data=data, proxy=proxy)
+                data['proxy'] = proxy
+                logger.info(f"Using proxy {proxy}")
+                response = await get_data(data=data)
             else:
                 response = await get_data(data=data)
             if response == None:
-                tries += 1
-                logger.warning(f"Error getting data - Trying again - ({tries}/{attempt_count})")
+                attempts += 1
+                logger.warning(f"Error getting data - Trying again - ({attempts}/2)")
             else:
+                #Check valid response from scrappey
                 is_valid = verifier(response)
                 if is_valid:
                     return response['solution']['response']
                 else:
-                    tries += 1
-                    logger.warning(f"Error verifying data - Trying again - ({tries}/{attempt_count})")
-
+                    attempts +=1 
             time.sleep(1)
         except Exception as e:
-            logger.warning(f"""Error scraping live data {e}""")
-            tries += 1
+            logger.warning(f"Error scraping live data from {site}: {e}")
+            attempts += 1
 
 async def get_proxy():
     with open('flagged.txt', 'r') as f:
