@@ -1,5 +1,5 @@
 import json
-import markets
+import betmgm_markets
 import asyncio
 import constants
 from db import db
@@ -41,14 +41,14 @@ def switcher(game, id, match_name, tournament):
 
     match name:
         case "Set 1 Winner":
-            markets.handle_set_one_winner(game, id, tournament, match_name, "BetMGM")
+            betmgm_markets.handle_set_one_winner(game, id, tournament, match_name, "BetMGM")
 
     #Using fuzz radio for game winner
     ratios = [set_one_name, set_two_name, set_three_name, set_four_name, set_five_name]
     for r in ratios:
         fuzz_ratio = fuzz.ratio(name, r)
         if fuzz_ratio >= 95:
-            markets.handle_set(data=game, id=id, tournament=tournament, match_name=match_name, source="BetMGM")
+            betmgm_markets.handle_set(data=game, id=id, tournament=tournament, match_name=match_name, source="BetMGM")
 
 if __name__ == "__main__":
     asyncio.run(scrape_data())

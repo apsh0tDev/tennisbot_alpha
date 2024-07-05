@@ -1,5 +1,6 @@
 import time
 import random
+import pytz
 import asyncio
 import datetime as dt
 import draftkings
@@ -43,20 +44,45 @@ def get_schedule():
     
     asyncio.run(scrape_events())
 
-def get_live():
+def check_hour():
     jobs = scheduler.get_jobs()
     jobs_names = []
     for job in jobs:
         jobs_names.append(job.name)
 
-    """if 'get_live_data' not in jobs_names:
-        scheduler.add_job(get_live_data, 'interval', minutes=1)"""
+    ny_timezone = pytz.timezone('America/New_York')
+    ny_time = dt.datetime.now(ny_timezone)
+    if ny_time.hour == 5:
+        logger.info("It's 5 am, wake up bot!")
+        file = open("runner_status.dat", 'w')
+        file.write("Live")
+        if 'get_live_data' not in jobs_names:
+            logger.info("Adding live data job")
+            scheduler.add_job(get_live_data, 'interval', minutes=1)
+    elif ny_time.hour == 17:
+        logger.info("It's 5 pm, sleep bot!")
+        file = open("runner_status.dat", 'w')
+        file.write("Not_Live")
+        if 'get_live_data' in jobs_names:
+            logger.info("Removing live data job")
+            scheduler.remove_job(get_live_data)
 
+    if ny_time.hour == 2:
+        print("this is just a test")
+    else:
+        logger.info("It's not time to do anything")
+
+
+def all_runners():
+    jobs = scheduler.get_jobs()
+    jobs_names = []
+    for job in jobs:
+        jobs_names.append(job.name)
     """if 'scrape_fan_duel' not in jobs_names:
         scheduler.add_job(scrape_fanduel, 'interval', seconds=40)"""
     
-    if 'scrape_betmgm' not in jobs_names:
-        scheduler.add_job(scrape_betmgm, 'interval', seconds=15)
+    """if 'scrape_betmgm' not in jobs_names:
+        scheduler.add_job(scrape_betmgm, 'interval', seconds=15)"""
     
     """if 'scrape_draftkings' not in jobs_names:
         scheduler.add_job(scrape_draftkings, 'interval', seconds=45)"""
@@ -66,8 +92,10 @@ job_defaults = {
     'max_instances': 10
 }
 scheduler.configure(job_defaults=job_defaults)
-scheduler.add_job(get_live, 'interval', minutes=1)
+#scheduler.add_job(all_runners, 'interval', minutes=1)
 scheduler.add_job(get_schedule, 'interval', minutes=30)
+scheduler.add_job(check_hour, 'interval', minutes=30 )
+scheduler.add_job
 
 
 scheduler.start()
