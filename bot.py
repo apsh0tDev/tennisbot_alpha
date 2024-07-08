@@ -17,7 +17,7 @@ from discord.ext import commands, tasks
 #---Init
 load_dotenv()
 
-current_branch = "PROD"
+current_branch = "DEV"
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
