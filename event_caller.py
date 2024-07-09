@@ -1,19 +1,39 @@
 import json
 import asyncio
 import constants
+import betmgm_caller
+import fanduel_caller
 from db import db
 from rich import print
 from loguru import logger
 from connection import scrape
-from betmgm_caller import scrape_event
 
-async def get_events():
+"""def get_events():
     return db.table("matches_list").select("*").execute()
 
+events = get_events()
+
 async def call_events():
-    ids = [16025255, 16041962, 16025246, 16025251]
+    ids = [item['match_id'] for item in events.data]
+    print(ids)
     tasks = [scrape_event(id=match) for match in ids]
     
+    await asyncio.gather(*tasks)"""
+
+def get_events():
+    return db.table("matches_list").select("*").execute()
+
+events = get_events()
+
+async def call_events():
+    fanduel_ids = [item['match_id'] for item in events.data if item['source'] == "FanDuel"]
+    betmgm_ids = [item['match_id'] for item in events.data if item['source'] == "BetMGM"]
+    #TODO Draftkings IDS
+    
+    tasks_one = [betmgm_caller.scrape_event(id=match) for match in betmgm_ids]
+    tasks_two = [fanduel_caller.scrape_event(id=match) for match in fanduel_ids]
+
+    tasks = [*tasks_one, *tasks_two]
     await asyncio.gather(*tasks)
 
 if __name__ == "__main__":

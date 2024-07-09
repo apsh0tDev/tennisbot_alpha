@@ -41,6 +41,18 @@ async def scrape_simple(data, site):
             else:
                 print(response)
                 return None
+            
+async def scrape_with_proxy(data, site):
+    proxy = await get_proxy()
+    logger.info(f"Scraping from {site} - using proxy {proxy}")
+    data['proxy'] = proxy
+    async with aiohttp.ClientSession() as session:
+        async with session.post(scrappey, headers=headers, json=data) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                print(response)
+                return None    
     
 async def scrape(data, site):
     logger.info(f"Scraping from {site}")

@@ -44,16 +44,31 @@ async def scrape_data():
 
 #Get all markets by event
 async def scrape_event(id):
-    logger.info(f"Starting task {id}")
+    logger.info(f"Starting task {id} - BetMGM")
+    url = constants.schedule_event.format(id=id)
     data = {
         'cmd' : 'request.get',
-        'url' : constants.schedule_url,
+        'url' : url,
         'requestType' : 'request'
     }
     response = await scrape_simple(data, "BetMGM")
     is_valid = verifier(response)
-    print(is_valid)
-    logger.info(f"Ending task {id}")
+    if is_valid:
+        if 'solution' in response and 'response' in response['solution']:
+            res = json.loads(response['solution']['response'])
+            if 'fixture' in res:
+                if 'games' in res['fixture']:
+                    games = res['fixture']['games']
+                    tasks = [market_handler(game) for game in games]
+                    await asyncio.gather(*tasks)
+            
+    else:
+        print(f"Add for retry: {id} - BetMGM")
+    logger.info(f"Ending task {id} - BetMGM")
+
+async def market_handler(game):
+    market_name = game['name']['value']
+    print(market_name)
 
 if __name__ == "__main__":
     asyncio.run(scrape_data())

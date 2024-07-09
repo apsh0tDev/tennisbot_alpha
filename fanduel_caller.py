@@ -1,10 +1,10 @@
 import json
 import asyncio
 import constants
+from db import db
 from rich import print
 from loguru import logger
-from connection import scrape
-from fanduel_markets import handle_set_winner
+from connection import scrape, scrape_with_proxy
 
 async def scrape_data():
     data = {
@@ -16,62 +16,42 @@ async def scrape_data():
     response = await scrape(data, "FanDuel")
     try:
         load = json.loads(response)
-        events = []
+        
         if 'attachments' in load and 'markets' in load['attachments']:
+            #Markets
             markets = load['attachments']['markets']
             list_of_dicts = [{key: value} for key, value in markets.items()]
-
             for market in list_of_dicts:
                 for key in market:
-                    events.append(market[key])
-            
-            logger.info("Handling markets")
-            await handle_markets(events)
+                    if 'inPlay' in market[key] and market[key]['inPlay'] == True:
+                        info = {
+                            "match_id" : market[key]['eventId'],
+                            "match_name" : f"{market[key]['runners'][0]['runnerName']} v {market[key]['runners'][1]['runnerName']}",
+                            "source" : "FanDuel"
+                        }
+                        search = db.table("matches_list").select("*").match({"match_id": info['match_id'], "match_name": info['match_name'], "source": info['source']}).execute()
+
+                        if len(search.data) == 0:
+                            res = db.table("matches_list").insert(info).execute()
+                            print(res)
+                        else:
+                            logger.info(f"{info['match_id']} already in table. Skipping")
 
     except Exception as e:
-        logger.error(e)
+        logger.info(f"Error Scraping FanDuel - {e}")
 
-async def handle_markets(events):
 
-    calls = []
-
-    #for event in events:
-    if events[0]['inPlay'] == False:
-        calls.append(get_event(events[0]['eventId'], events[0]['competitionId']))
-
-    await asyncio.gather(*calls)
-
-    """if 'attachments' in load and 'markets' in load['attachments']:
-        markets = load['attachments']['markets']
-        list_of_dicts = [{key: value} for key, value in markets.items()]
-        event_name = load['attachments']['events'][id]['name']
-        tournament = load['attachments']['competitions'][tournamentId]['name']
-        for market in list_of_dicts:
-            for key in market:
-                marketName = market[key]['marketName']
-                if marketName == 'Set 1 Winner' or marketName == 'Set 2 Winner':
-                    handle_set_winner(event_name, tournament, marketName, market[key])"""
-
-async def get_event(eventId, tournamentId):
+async def scrape_event(id):
+    logger.info(f"Starting task {id} - Fanduel")
+    url = constants.fanduel_event_url.format(id=id)
     data = {
         'cmd' : 'request.get',
-        'url' : f"https://sbapi.ny.sportsbook.fanduel.com/api/event-page?_ak=FhMFpcPWXMeyZxOx&eventId={eventId}&tab=all&useCombinedTouchdownsVirtualMarket=false&usePulse=false&useQuickBets=false",
+        'url' : url,
         'requestType' : 'request'
     }
-    response = await scrape(data, "FanDuel")
-    load = json.loads(response)
-    if 'attachments' in load and 'markets' in load['attachments']:
-        markets = load['attachments']['markets']
-        if len(markets) > 0:
-            list_of_dicts = [{key: value} for key, value in markets.items()]
-            event_name = load['attachments']['events'][eventId]['name']
-            tournament = load['attachments']['competitions'][tournamentId]['name']
-            for market in list_of_dicts:
-                for key in market:
-                    marketName = market[key]['marketName']
-                    if marketName == 'Set 1 Winner' or marketName == 'Set 2 Winner':
-                        handle_set_winner(event_name, tournament, marketName, market[key])
-
+    response = await scrape_with_proxy(data, "FanDuel")
+    print(response)
+    
 
 if __name__ == "__main__":
     asyncio.run(scrape_data())
