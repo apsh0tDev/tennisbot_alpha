@@ -1,7 +1,9 @@
 import os
 import json
 import time
+import random
 import asyncio
+import aiohttp
 import requests
 from rich import print
 from loguru import logger
@@ -29,6 +31,16 @@ async def get_data(data):
         logger.error(f"ERROR")
         logger.error(response)
         return None
+    
+async def scrape_simple(data, site):
+    logger.info(f"Scraping from {site}")
+    async with aiohttp.ClientSession() as session:
+        async with session.post(scrappey, headers=headers, json=data) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                print(response)
+                return None
     
 async def scrape(data, site):
     logger.info(f"Scraping from {site}")

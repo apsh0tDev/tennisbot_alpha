@@ -5,7 +5,6 @@ commands_message = f"""🤖 **Commands:**
                     """
 
 #Urls
-schedule_url = f"https://sports.ny.betmgm.com/en/sports/api/widget/widgetdata?layoutSize=Large&page=SportLobby&sportId=5&widgetId=/mobilesports-v1.0/layout/layout_standards/modules/sportgrid&shouldIncludePayload=true"
 draftkings_url = f"https://sportsbook-nash.draftkings.com/sites/US-SB/api/v4/featured/displaygroups/6/live?format=json"
 draftkings_url_scheduled = f"https://sportsbook-nash-usva.draftkings.com/sites/US-VA-SB/api/v2/displaygroupinfo?format=json"
 
@@ -16,3 +15,8 @@ proxy_needed = [
     "Draftkings",
     "FanDuel"
 ]
+
+#   caller urls
+# BetMGM
+schedule_url = f"https://sports.ny.betmgm.com/en/sports/api/widget/widgetdata?layoutSize=Large&page=SportLobby&sportId=5&widgetId=/mobilesports-v1.0/layout/layout_standards/modules/sportgrid&shouldIncludePayload=true"
+schedule_event = "https://sports.ny.betmgm.com/cds-api/bettingoffer/fixture-view?x-bwin-accessid=ZjVlNTEzYzAtMGUwNC00YTk1LTg4OGYtZDQ4ZGNhOWY4Mjc1&lang=en-us&country=US&userCountry=US&subdivision=US-XY&offerMapping=All&scoreboardMode=Full&fixtureIds={id}&state=Latest&includePrecreatedBetBuilder=true&supportVirtual=false&isBettingInsightsEnabled=true&useRegionalisedConfiguration=true&includeRelatedFixtures=false&statisticsModes=All"
