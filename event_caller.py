@@ -3,6 +3,7 @@ import asyncio
 import constants
 import betmgm_caller
 import fanduel_caller
+import draftkings_caller
 from db import db
 from rich import print
 from loguru import logger
@@ -28,12 +29,14 @@ events = get_events()
 async def call_events():
     fanduel_ids = [item['match_id'] for item in events.data if item['source'] == "FanDuel"]
     betmgm_ids = [item['match_id'] for item in events.data if item['source'] == "BetMGM"]
+    draftkings_ids = [item['match_id'] for item in events.data if item['source'] == "DraftKings"]
     #TODO Draftkings IDS
     
     tasks_one = [betmgm_caller.scrape_event(id=match) for match in betmgm_ids]
     tasks_two = [fanduel_caller.scrape_event(id=match) for match in fanduel_ids]
+    tasks_three = [draftkings_caller.scrape_event(id=match) for match in draftkings_ids]
 
-    tasks = [*tasks_one, *tasks_two]
+    tasks = [*tasks_two]
     await asyncio.gather(*tasks)
 
 if __name__ == "__main__":

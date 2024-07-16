@@ -67,6 +67,9 @@ async def scrape_tournament(id):
                         logger.info(f"{info['match_id']} already in table. Skipping")
     else:
         print(f"Add for retry: {id} - Draftkings")
+
+async def scrape_event(id):
+    logger.info(f"Starting task {id} - Draftkings - Event")
     
 
 

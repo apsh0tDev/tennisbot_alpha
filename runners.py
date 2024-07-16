@@ -44,12 +44,19 @@ def get_schedule():
     
     asyncio.run(scrape_events())
 
+def check_status():
+        file = open("runner_status.dat", "r")
+        status = str(file.read())
+        jobs = scheduler.get_jobs()
+        jobs_names = [job.name for job in jobs]
+        if status == "Live" and'get_live_data' not in jobs_names:
+                scheduler.add_job(get_live_data, 'interval', minutes=1)
+
 def check_hour():
     jobs = scheduler.get_jobs()
     jobs_names = []
     for job in jobs:
         jobs_names.append(job.name)
-
     ny_timezone = pytz.timezone('America/New_York')
     ny_time = dt.datetime.now(ny_timezone)
     if ny_time.hour == 5:
@@ -59,8 +66,8 @@ def check_hour():
         if 'get_live_data' not in jobs_names:
             logger.info("Adding live data job")
             scheduler.add_job(get_live_data, 'interval', minutes=1)
-    elif ny_time.hour == 17:
-        logger.info("It's 5 pm, sleep bot!")
+    elif ny_time.hour == 7:
+        logger.info("It's 7 pm, sleep bot!")
         file = open("runner_status.dat", 'w')
         file.write("Not_Live")
         if 'get_live_data' in jobs_names:
@@ -75,11 +82,11 @@ def all_runners():
     jobs_names = []
     for job in jobs:
         jobs_names.append(job.name)
-    """if 'scrape_fan_duel' not in jobs_names:
-        scheduler.add_job(scrape_fanduel, 'interval', seconds=40)"""
+    if 'scrape_fan_duel' not in jobs_names:
+        scheduler.add_job(scrape_fanduel, 'interval', seconds=40)
     
     """if 'scrape_betmgm' not in jobs_names:
-        scheduler.add_job(scrape_betmgm, 'interval', seconds=15)"""
+        scheduler.add_job(scrape_betmgm, 'interval', seconds=35)"""
     
     """if 'scrape_draftkings' not in jobs_names:
         scheduler.add_job(scrape_draftkings, 'interval', seconds=45)"""
@@ -89,15 +96,16 @@ job_defaults = {
     'max_instances': 10
 }
 scheduler.configure(job_defaults=job_defaults)
-#scheduler.add_job(all_runners, 'interval', minutes=1)
-scheduler.add_job(get_schedule, 'interval', minutes=30)
-scheduler.add_job(check_hour, 'interval', minutes=30 )
+scheduler.add_job(all_runners, 'interval', minutes=1)
+#scheduler.add_job(get_schedule, 'interval', minutes=30)
+#scheduler.add_job(check_hour, 'interval', minutes=1 )
 scheduler.add_job
 
 
 scheduler.start()
 
 try:
+    check_status()
     asyncio.get_event_loop().run_forever()
 except (KeyboardInterrupt, SystemExit):
     pass

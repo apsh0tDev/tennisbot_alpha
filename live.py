@@ -113,7 +113,7 @@ async def post_scores(match):
     
 
 async def update_scores(match):
-    db.table("scoreboard").update({'teamA': match['teamA'], 'teamB': match['teamB']}).eq('match_id', match['match_id']).execute()
+    db.table("scoreboard").update({'teamA': match['teamA'], 'teamB': match['teamB'], 'period' : match['period']} ).eq('match_id', match['match_id']).execute()
     
 async def clean_up(id):
     response = db.table("live_matches").delete().eq('match_id', id).execute()
@@ -123,8 +123,8 @@ async def clean_up(id):
 async def get_live_matches():
     live_matches = db.table("live_matches").select("*").execute()
     scoreboard = db.table("scoreboard").select("*").execute()
-    
     if len(live_matches.data) > 0 and len(scoreboard.data) > 0:
+        print(live_matches.data, scoreboard.data)
         formatted = await format_live_matches(data=live_matches.data, scores=scoreboard.data)
         return formatted
     else:
@@ -136,6 +136,7 @@ async def format_live_matches(data, scores):
 
     #Group by event
     group = await live_merger(data=data, scores=scores)
+    print(group)
     if len(group) > 0:
         for tournament in group:
             formatted = await format_tournament(tournament=tournament)
@@ -146,6 +147,7 @@ async def format_live_matches(data, scores):
             return code_block
 
 async def live_merger(data, scores):
+    print(data, scores)
     logger.info("Merging events")
     scores_dict = {}
 
