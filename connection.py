@@ -21,7 +21,6 @@ headers = { 'Content-Type' : 'application/json' }
 scrappey = f"https://publisher.scrappey.com/api/v1?key={key}"
 
 
-
 async def get_data(data):
     options = data
     try:
@@ -43,16 +42,21 @@ async def scrape_simple(data, site):
                 return None
             
 async def scrape_with_proxy(data, site):
-    proxy = await get_proxy()
-    logger.info(f"Scraping from {site} - using proxy {proxy}")
-    data['proxy'] = proxy
-    async with aiohttp.ClientSession() as session:
-        async with session.post(scrappey, headers=headers, json=data) as response:
-            if response.status == 200:
-                return await response.json()
-            else:
-                print(response)
-                return None    
+    try:
+        proxy = await get_proxy()
+        logger.info(f"Scraping from {site} - using proxy {proxy}")
+        data['proxy'] = proxy
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(scrappey, headers=headers, json=data) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    logger.error(f"Failed to scrape {site} - Status: {response.status}")
+                    return None
+    except Exception as e:
+        logger.exception(f"Exception occurred while scraping {site}: {e}")
+        return None 
     
 async def scrape(data, site):
     logger.info(f"Scraping from {site}")

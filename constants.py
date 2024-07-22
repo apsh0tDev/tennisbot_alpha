@@ -21,7 +21,14 @@ schedule_event = "https://sports.ny.betmgm.com/cds-api/bettingoffer/fixture-view
 
 # FanDuel
 fanduel_url = f"https://sbapi.ny.sportsbook.fanduel.com/api/content-managed-page?page=SPORT&eventTypeId=2&_ak=FhMFpcPWXMeyZxOx&timezone=America%2FNew_York"
-fanduel_event_url = "https://sbapi.ny.sportsbook.fanduel.com/api/event-page?_ak=FhMFpcPWXMeyZxOx&eventId={id}&tab=all&useCombinedTouchdownsVirtualMarket=true&usePulse=true&useQuickBets=true"
+fanduel_event_url = "https://sbapi.ny.sportsbook.fanduel.com/api/event-page?_ak=FhMFpcPWXMeyZxOx&eventId={id}&tab={tab}&useCombinedTouchdownsVirtualMarket=true&usePulse=true&useQuickBets=true"
+fanduel_tabs = [
+    {"name" : "Popular", "case": "popular"},
+    {"name" : "Point by Point", "case": "point-by-point"},
+    {"name" : "Game Markets", "case": "game-markets"},
+    {"name" : "Set Markets", "case": "set-markets"},
+    {"name" : "Player Markets", "case" : "player-markets"}
+]
 
 #Draftkings
 draftkings_url = f"https://sportsbook-nash.draftkings.com/sites/US-SB/api/v4/featured/displaygroups/6/live?format=json"

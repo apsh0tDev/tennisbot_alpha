@@ -1,8 +1,8 @@
 import json
 import asyncio
 import constants
-import betmgm_caller
-import fanduel_caller
+import betmgm
+import fanduel
 import draftkings_caller
 from db import db
 from rich import print
@@ -32,7 +32,7 @@ async def call_events():
     draftkings_ids = [item['match_id'] for item in events.data if item['source'] == "DraftKings"]
     #TODO Draftkings IDS
     
-    tasks_one = [betmgm_caller.scrape_event(id=match) for match in betmgm_ids]
+    tasks_one = [betmgm.scrape_event(id=match) for match in betmgm_ids]
     tasks_two = [fanduel_caller.scrape_event(id=match) for match in fanduel_ids]
     tasks_three = [draftkings_caller.scrape_event(id=match) for match in draftkings_ids]
 

@@ -14,6 +14,11 @@ def verifier(value):
 def remove_parentheses(text):
     return re.sub(r'\([^)]*\)', '', text)
 
+def format_match_name(text):
+    text = re.sub(r'\([^)]*\)', '', text)
+    text = re.sub(r'\s*-\s*', ' vs ', text)
+    return text.strip()
+
 def format_datetime(input_datetime_str):
     input_datetime = datetime.fromisoformat(input_datetime_str.replace('Z', '+00:00'))
     ny_timezone = pytz.timezone('America/New_York')
@@ -56,6 +61,27 @@ def time_ago(datetime_str):
         return f"{int(minutes)} minutes ago"
     else:
         return f"{int(seconds)} seconds ago"
+    
+def extract_players(matchup):
+    return matchup.split(" v ")
+
+def separate_name_and_score(player_score):
+    match = re.match(r"^(.*?)(\d+-\d+)$", player_score)
+    if match:
+        name = match.group(1).strip()
+        score = match.group(2).strip()
+        return name, score
+    else:
+        return None, None
+    
+def extract_set_and_games(description):
+    match = re.search(r'Set (\d+) Race to (\d+) Games', description)
+    if match:
+        set_number = int(match.group(1))
+        game_number = int(match.group(2))
+        return set_number, game_number
+    return None, None
+
 
 
 
