@@ -77,7 +77,7 @@ async def scrape_events():
 
 async def scrape_event(id):
     logger.info(f"Starting task {id} at FanDuel ")
-    url = constants.fanduel_event_url.format(id=id, tab=constants.fanduel_tabs[3]['case'])
+    url = constants.fanduel_event_url.format(id=id, tab=constants.fanduel_tabs[2]['case'])
     print(url)
     data = {
     'cmd' : 'request.get',

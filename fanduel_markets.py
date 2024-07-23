@@ -46,6 +46,16 @@ async def market_sorter(event, players, match_name):
             await over_under_handicap(event, match_name)
         case "SET_X_RACE_TO_Y_GAMES":
             await set_x_race_to_y_games(event, match_name)
+        #Game Markets
+        case _ if re.match(r"^SET_\d+_GAME_\d+_WINNER$", market_type):
+            await set_i_game_i_winner(event, match_name)
+        case "SET_X_GAME_Y_TOTAL_POINTS":
+            await set_x_game_y_total_points(event, match_name)
+        case "SET_X_GAME_Y_TO_DEUCE_YES/NO":
+            await set_x_game_y_to_deuce(event, match_name)
+        case "SET_X_GAME_Y_POINT_HANDICAP":
+            await set_x_game_y_to_handicap(event, match_name, players)
+
 
 async def set_default_info(event, match_name):
     info = {
@@ -425,7 +435,7 @@ async def over_under_handicap(event, match_name):
     to_update = { "teamA" : info['teamA'], "teamB": info['teamB'], "isOpen" : info['isOpen'] }
     await db_actions(to_match=to_match, to_update=to_update, table_name="set_spread", info=info)
 
-# Set X race to Y games=
+# Set X race to Y games
 async def set_x_race_to_y_games(event, match_name):
     info = await set_default_info(event, match_name)
     info['teamA'] = {
@@ -436,7 +446,7 @@ async def set_x_race_to_y_games(event, match_name):
         "name" : event['runners'][1]['runnerName'],
         "odds" : odds_default(event['runners'], 1)
     }
-    set_number, game_number = extract_set_and_games(event['marketName'])
+    set_number, game_number = extract_set_and_games(event['marketName'], "Race")
     info['set_number'] = set_number
     info['game_number'] = game_number
     info['market_full_name'] = event['marketName']
@@ -447,6 +457,68 @@ async def set_x_race_to_y_games(event, match_name):
     await db_actions(to_match=to_match, to_update=to_update, table_name="set_x_to_win_y_games", info=info)
     
 #---- End of Set markets
+#---- Game Markets
+
+#Set X game X winner
+async def set_i_game_i_winner(event, match_name):
+    info = await set_default_info(event, match_name)
+    info['teamA'] = {
+        "name" : event['runners'][0]['runnerName'],
+        "odds" : odds_default(event['runners'], 0)
+    }
+    info['teamB'] = {
+        "name" : event['runners'][1]['runnerName'],
+        "odds" : odds_default(event['runners'], 1)
+    }
+    set_number, game_number = extract_set_and_games(event['marketName'], "Winner")
+    info['game_number'] = game_number
+    info['set_number'] = set_number
+
+    to_match = {"match_id" : info['match_id'], "match_name" : info['match_name'], "source" : "FanDuel", "game_number": game_number, "set_number": set_number}
+    to_update = { "teamA" : info['teamA'], "teamB": info['teamB'], "isOpen" : info['isOpen'] }
+
+    await db_actions(to_match=to_match, to_update=to_update, table_name="set_i_game_i_winner", info=info)
+
+#Set X game Y Total Points
+async def set_x_game_y_total_points(event, match_name):
+    info = await set_default_info(event, match_name)
+    info['over'] = {"isOpen": True if event['runners'][0]['runnerStatus'] == "ACTIVE" else False,
+                    "odds" : odds_default(event['runners'], 0)}
+    info['under'] = {"isOpen": True if event['runners'][1]['runnerStatus'] == "ACTIVE" else False,
+                    "odds" : odds_default(event['runners'], 1)}
+    info['point_number'] = event['runners'][0]['runnerName'].split(' ')[1]
+    game_number, set_number =  extract_set_and_games(event['marketName'], "Total Points")
+    info['set_number'] = set_number
+    info['game_number'] = game_number
+
+    to_match = { "match_id" : info['match_id'], "match_name" : info['match_name'], "source" : "FanDuel", "game_number" : game_number, "set_number" : set_number, "point_number" : info['point_number'] }
+    to_update = { "over" : info['over'], "under" : info['under'], "isOpen" : info['isOpen'] }
+
+    await db_actions(to_match=to_match, to_update=to_update, table_name="set_x_game_y_total_points", info=info)
+
+#Set X game Y To Deuce
+async def set_x_game_y_to_deuce(event, match_name):
+    info = await set_default_info(event, match_name)
+    info['YES'] = {"isOpen": True if event['runners'][0]['runnerStatus'] == "ACTIVE" else False,
+                    "odds" : odds_default(event['runners'], 0)}
+    info['NO'] = {"isOpen": True if event['runners'][1]['runnerStatus'] == "ACTIVE" else False,
+                    "odds" : odds_default(event['runners'], 1)}
+    set_number, game_number = extract_set_and_games(event['marketName'], "Deuce")
+    info['set_number'] = set_number
+    info['game_number'] = game_number
+
+    to_match = { "match_id" : info['match_id'], "match_name" : info['match_name'], "source" : "FanDuel", "game_number" : game_number, "set_number" : set_number}
+    to_update = { "YES" : info['YES'], "NO" : info['NO'], "isOpen" : info['isOpen'] }
+
+    await db_actions(to_match=to_match, to_update=to_update, table_name="set_x_game_y_to_deuce", info=info)
+
+#Set X game Y Handicap
+async def set_x_game_y_to_handicap(event, match_name, players):
+    info = await set_default_info(event, match_name)
+    print(event)
+    
+
+#---- End of Game markets
 
 #-------- Uploaders
 async def db_actions(to_match, to_update, table_name, info):

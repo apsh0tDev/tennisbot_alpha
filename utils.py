@@ -74,8 +74,15 @@ def separate_name_and_score(player_score):
     else:
         return None, None
     
-def extract_set_and_games(description):
-    match = re.search(r'Set (\d+) Race to (\d+) Games', description)
+def extract_set_and_games(description, case):
+    if case == "Race":
+        match = re.search(r'Set (\d+) Race to (\d+) Games', description)
+    elif case == "Winner":
+        match = re.search(r'Set (\d+) Game (\d+) Winner', description)
+    elif case == "Total Points":
+        match = re.search(r'Set (\d+) Game (\d+) Total Points', description)
+    elif case == "Deuce":
+        match = re.search(r'Set (\d+) Game (\d+) to Deuce', description)
     if match:
         set_number = int(match.group(1))
         game_number = int(match.group(2))
