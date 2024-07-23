@@ -516,6 +516,24 @@ async def set_x_game_y_to_deuce(event, match_name):
 async def set_x_game_y_to_handicap(event, match_name, players):
     info = await set_default_info(event, match_name)
     print(event)
+    info['teamA'] = {
+        "name" : players[0],
+        "odds" : {
+            "+2.5" : odds_specific(event['runners'], [players[0], "+2.5"], "Handicap"),
+            "-2.5" : odds_specific(event['runners'], [players[0], "-2.5"], "Handicap"),
+        }
+    }
+
+    info['teamB'] = {
+        "name" : players[1],
+        "odds" : {
+            "+2.5" : odds_specific(event['runners'], [players[1], "+2.5"], "Handicap"),
+            "-2.5" : odds_specific(event['runners'], [players[1], "-2.5"], "Handicap"),
+        }
+    }
+    print(info)
+
+#TODO Pending
     
 
 #---- End of Game markets
@@ -531,6 +549,27 @@ async def db_actions(to_match, to_update, table_name, info):
         logger.info(f"UPLOAD - {info['match_id']} - {response}")
 
 # ------- Utils
+
+def odds_specific(odds, condition, type):
+    if type == "Handicap":
+        player_name, handicap = condition
+        for runner in odds:
+            if player_name in runner['runnerName'] and handicap in runner['runnerName']:
+                win_runner_odds = runner.get('winRunnerOdds')
+                if win_runner_odds:
+                    american_odds = win_runner_odds.get('americanDisplayOdds')
+                    decimal_odds = win_runner_odds.get('trueOdds')
+                    if decimal_odds is not None:
+                        decimal_odds = round(decimal_odds['decimalOdds'], 2)
+                else:
+                    american_odds = None
+                    decimal_odds = None
+                return {
+                    "americanOdds" : american_odds['americanOdds'],
+                    "decimalOdds" : decimal_odds
+                }
+                    
+        return None
 
 def odds_default(odds, order):
     win_runner_odds = odds[order].get('winRunnerOdds')
