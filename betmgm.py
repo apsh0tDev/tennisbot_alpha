@@ -1,5 +1,6 @@
 import json
 import asyncio
+import re
 import constants
 import betmgm_markets
 from db import db
@@ -25,9 +26,9 @@ async def scrape_data():
         if 'widgets' in load and 'payload' in load['widgets'][0] and 'fixtures' in load['widgets'][0]['payload']:
             fixtures = load['widgets'][0]['payload']['fixtures']
             for match in fixtures:
-                #if match['stage'] == "Live":
+                if match['stage'] == "Live":
                     info = {
-                        "match_name" : match['name']['value'],
+                        "match_name" : remove_parentheses(match['name']['value']),
                         "match_id" : match['id'],
                         "tournament" : match['tournament']['name']['value'],
                         "competition" : match['competition']['name']['value'],
@@ -77,7 +78,7 @@ async def scrape_event(id):
                     match_players = [ remove_parentheses(res['fixture']['participants'][0]['name']['value']), remove_parentheses(res['fixture']['participants'][1]['name']['value'])]
                     tasks = []
                     for game in games:
-                        tasks.append(market_handler(game, match_name, match_id, match_players))
+                        tasks.append(betmgm_markets.market_sorter(game, match_name, match_id, match_players))
                     await asyncio.gather(*tasks)
 
             logger.info(f"Ending task {id} - BetMGM")
@@ -86,20 +87,6 @@ async def scrape_event(id):
     except Exception as e:
         logger.error(f"Could not finish task {id} - BetMGM")
         logger.error(e)
-
-async def market_handler(game, match_name, match_id, match_players):
-    market_name = game['name']['value']
-    print(market_name)
-    game['match_name'] = match_name
-    match market_name:
-        case "Match Winner":
-            await betmgm_markets.handle_match_winner(game, match_id, match_name, match_players)
-        case "Set Betting":
-            #TODO finish this market
-            await betmgm_markets.handle_set_betting(game, match_id, match_name, match_players)
-        case "Set 1 Winner":
-            await betmgm_markets.handle_set_one_winner(game, match_id, match_name, match_players)
-        case "Set 2 Winner":
-             await betmgm_markets.handle_set_two_winner(game, match_id, match_name, match_players)
+    
 if __name__ == "__main__":
     asyncio.run(scrape_events())

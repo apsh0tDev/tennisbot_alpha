@@ -5,7 +5,7 @@ from loguru import logger
 import datetime as dt
 
 def verifier(value):
-    if 'solution' in value and 'verified' in value['solution'] and value['solution']['verified'] == True:
+    if value != None and 'solution' in value and 'verified' in value['solution'] and value['solution']['verified'] == True:
         return True
     else:
         logger.error(value)
@@ -86,6 +86,15 @@ def extract_set_and_games(description, case):
     if match:
         set_number = int(match.group(1))
         game_number = int(match.group(2))
+        return set_number, game_number
+    return None, None
+
+def extract_set_and_games_betmgm(description, case):
+    if case == "Winner":
+        match = re.search(r'Game (\d+) Winner, Set (\d+)')
+    if match:
+        game_number = int(match.group(1))
+        set_number = int(match.group(2))
         return set_number, game_number
     return None, None
 

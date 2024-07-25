@@ -41,22 +41,33 @@ async def scrape_simple(data, site):
                 print(response)
                 return None
             
-async def scrape_with_proxy(data, site):
+async def scrape_with_proxy(data, site, max_retries=2, retry_delay=1):
     try:
-        proxy = await get_proxy()
-        logger.info(f"Scraping from {site} - using proxy {proxy}")
-        data['proxy'] = proxy
+        for attempt in range(max_retries):
+            proxy = await get_proxy()
+            logger.info(f"Scraping from {site} - using proxy {proxy}")
+            data['proxy'] = proxy
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(scrappey, headers=headers, json=data) as response:
+                    if response.status == 200:
+                        response_text = await response.text()
+                        if "COUNTRY NOT SUPPORTED" not in response_text and "unallowed" not in response_text:
+                            return await response.json()
+                        else:
+                            logger.warning(f"Country not supported or unallowed access detected for {site}.")
+                    else:
+                        logger.error(f"Failed to scrape {site} - Status: {response.status}")
+            
+            logger.info(f"Retrying in {retry_delay} seconds...")
+            await asyncio.sleep(retry_delay)
         
-        async with aiohttp.ClientSession() as session:
-            async with session.post(scrappey, headers=headers, json=data) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    logger.error(f"Failed to scrape {site} - Status: {response.status}")
-                    return None
+        logger.error(f"All retries failed for {site}.")
+        return None
+
     except Exception as e:
         logger.exception(f"Exception occurred while scraping {site}: {e}")
-        return None 
+        return None
     
 async def scrape(data, site):
     logger.info(f"Scraping from {site}")
@@ -78,7 +89,9 @@ async def scrape(data, site):
                 #Check valid response from scrappey
                 is_valid = verifier(response)
                 if is_valid:
-                    return response['solution']['response']
+                    content = response['solution']['response']
+                    if "COUNTRY NOT SUPPORTED" not in content and "unallowed" not in content:
+                        return content
                 else:
                     attempts +=1 
             time.sleep(1)
@@ -91,6 +104,6 @@ async def get_proxy():
         flagged_proxies = f.read().splitlines()
 
     while True:
-        proxy = FreeProxy(country_id=['US', 'CA', 'GB', 'AT', 'IE', 'MT']).get()
+        proxy = FreeProxy(country_id=['US', 'CA']).get()
         if proxy not in flagged_proxies:
             return proxy

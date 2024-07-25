@@ -3,7 +3,7 @@ import random
 import pytz
 import asyncio
 import datetime as dt
-import draftkings
+import draftkings_old
 import fanduel
 import betmgm
 from loguru import logger
@@ -20,7 +20,7 @@ def scrape_fanduel():
     asyncio.run(fanduel.scrape_data())
 
 def scrape_draftkings():
-    asyncio.run(draftkings.scrape_data())
+    asyncio.run(draftkings_old.scrape_data())
 
 def scrape_betmgm():
     asyncio.run(betmgm.scrape_data())    

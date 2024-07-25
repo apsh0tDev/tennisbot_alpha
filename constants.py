@@ -33,3 +33,4 @@ fanduel_tabs = [
 #Draftkings
 draftkings_url = f"https://sportsbook-nash.draftkings.com/sites/US-SB/api/v4/featured/displaygroups/6/live?format=json"
 draftkings_tournaments = "https://sportsbook-nash-usva.draftkings.com/sites/US-VA-SB/api/v5/eventgroups/{id}?format=json"
+draftkings_markets = "https://sportsbook-nash-usva.draftkings.com/sites/US-VA-SB/api/v5/eventgroups/{tournament_id}/categories/{market_id}?format=json"
